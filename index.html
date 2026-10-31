@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APKStore</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,sans-serif;background:#0f1116;color:#e6e6e6;margin:0;padding:24px}
+  h1{text-align:center;margin:0 0 20px}
+  #search{display:block;width:100%;max-width:420px;margin:0 auto 20px;padding:10px 14px;
+          border-radius:10px;border:1px solid #2a2f3a;background:#1b1f27;color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;
+        max-width:1100px;margin:0 auto}
+  .card{background:#1b1f27;border-radius:12px;padding:16px;text-align:center;
+        display:flex;flex-direction:column;align-items:center}
+  .icon{font-size:38px}
+  .name{font-weight:600;margin:8px 0 4px;word-break:break-word}
+  .btn{margin-top:auto;background:#1e66f5;color:#fff;padding:8px 18px;border-radius:8px;
+       text-decoration:none;font-size:14px;margin-top:10px}
+  .btn:hover{background:#3b7cff}
+  .type{font-size:12px;opacity:.65;margin-top:8px}
+  .empty{text-align:center;opacity:.7;grid-column:1/-1;padding:40px}
+</style>
+</head>
+<body>
+<h1>Welcome to APKStore</h1>
+<input id="search" placeholder="Search apps and files...">
+<div id="list" class="grid">Loading…</div>
+
+<script>
+const USER="YOUR_USERNAME", REPO="YOUR_REPO", BRANCH="main";
+const INDEX=`https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/index.json`;
+const RAW=`https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/files/`;
+
+function typeOf(f){
+  const e=f.toLowerCase().split('.').pop();
+  const M={mp3:'🎵',wav:'🎵',ogg:'🎵',m4a:'🎵',mp4:'🎬',mkv:'🎬',avi:'🎬',mov:'🎬',webm:'🎬',
+           jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',svg:'🖼️'};
+  if(M[e]) return {label:'Media',icon:M[e]};
+  if(e==='apk') return {label:'Android App',icon:'🤖'};
+  if(e==='exe') return {label:'Windows App',icon:'🪟'};
+  if(e==='ipa') return {label:'iOS App',icon:'🍎'};
+  if(['pdf','doc','docx','txt','rtf','odt'].includes(e)) return {label:'Text / Document',icon:'📄'};
+  if(e==='mcpack'||e==='mcaddon') return {label:'Minecraft Mod',icon:'⛏️'};
+  if(e==='mcworld') return {label:'Minecraft World',icon:'🌍'};
+  if(e==='zip') return {label:'Offline PWA / ZIP',icon:'📦'};
+  return {label:'Unknown',icon:'❓'};
+}
+
+let all=[];
+const list=document.getElementById('list');
+const search=document.getElementById('search');
+
+function render(files){
+  if(!files.length){ list.innerHTML='<div class="empty">there\'s no app or file yet.</div>'; return; }
+  list.innerHTML=files.map(f=>{
+    const t=typeOf(f.filename);
+    const name=f.appName||f.filename;
+    return `<div class="card">
+      <div class="icon">${t.icon}</div>
+      <div class="name">${name}</div>
+      <a class="btn" href="${RAW}${f.filename}" download>Download</a>
+      <div class="type">${t.label}</div>
+    </div>`;
+  }).join('');
+}
+
+fetch(INDEX).then(r=>r.json()).then(d=>{ all=d.files||[]; render(all); })
+  .catch(()=>render([]));
+
+search.addEventListener('input',()=>{
+  const q=search.value.toLowerCase();
+  render(all.filter(f=>(f.appName||f.filename).toLowerCase().includes(q)));
+});
+</script>
+</body>
+</html>
