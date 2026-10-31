@@ -14,9 +14,10 @@
         max-width:1100px;margin:0 auto}
   .card{background:#1b1f27;border-radius:12px;padding:16px;text-align:center;
         display:flex;flex-direction:column;align-items:center}
-  .icon{font-size:38px}
+  .icon{font-size:38px;line-height:1}
+  .iconimg{width:64px;height:64px;border-radius:14px;object-fit:cover}
   .name{font-weight:600;margin:8px 0 4px;word-break:break-word}
-  .btn{margin-top:auto;background:#1e66f5;color:#fff;padding:8px 18px;border-radius:8px;
+  .btn{background:#1e66f5;color:#fff;padding:8px 18px;border-radius:8px;
        text-decoration:none;font-size:14px;margin-top:10px}
   .btn:hover{background:#3b7cff}
   .type{font-size:12px;opacity:.65;margin-top:8px}
@@ -32,19 +33,42 @@
 const USER="YOUR_USERNAME", REPO="YOUR_REPO", BRANCH="main";
 const INDEX=`https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/index.json`;
 const RAW=`https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/files/`;
+const ICON=`https://raw.githubusercontent.com/${USER}/${REPO}/${BRANCH}/files/`;
 
 function typeOf(f){
   const e=f.toLowerCase().split('.').pop();
-  const M={mp3:'🎵',wav:'🎵',ogg:'🎵',m4a:'🎵',mp4:'🎬',mkv:'🎬',avi:'🎬',mov:'🎬',webm:'🎬',
-           jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',svg:'🖼️'};
-  if(M[e]) return {label:'Media',icon:M[e]};
-  if(e==='apk') return {label:'Android App',icon:'🤖'};
-  if(e==='exe') return {label:'Windows App',icon:'🪟'};
-  if(e==='ipa') return {label:'iOS App',icon:'🍎'};
-  if(['pdf','doc','docx','txt','rtf','odt'].includes(e)) return {label:'Text / Document',icon:'📄'};
+  // Media – audio
+  if(['mp3','wav','ogg','m4a','aac','flac','opus','wma'].includes(e))
+    return {label:'Media',icon:'🎵'};
+  // Media – video
+  if(['mp4','mkv','avi','mov','webm','flv','wmv','m4v','3gp'].includes(e))
+    return {label:'Media',icon:'🎬'};
+  // Media – photo
+  if(['jpg','jpeg','png','gif','webp','svg','bmp','tiff','ico','heic'].includes(e))
+    return {label:'Media',icon:'🖼️'};
+  // Apps
+  if(e==='apk') return {label:'App',icon:'🤖',platform:'Android'};
+  if(e==='exe') return {label:'App',icon:'🪟',platform:'Windows'};
+  if(e==='ipa') return {label:'App',icon:'🍎',platform:'iOS'};
+  if(e==='msi') return {label:'App',icon:'🪟',platform:'Windows'};
+  if(e==='appx'||e==='msix') return {label:'App',icon:'🪟',platform:'Windows'};
+  if(e==='dmg'||e==='pkg') return {label:'App',icon:'🍏',platform:'macOS'};
+  if(e==='deb'||e==='rpm'||e==='flatpak'||e==='appimage') return {label:'App',icon:'🐧',platform:'Linux'};
+  // Documents
+  if(['pdf','doc','docx','txt','rtf','odt','xls','xlsx','ppt','pptx','csv'].includes(e))
+    return {label:'Text / Document',icon:'📄'};
+  // Minecraft
   if(e==='mcpack'||e==='mcaddon') return {label:'Minecraft Mod',icon:'⛏️'};
   if(e==='mcworld') return {label:'Minecraft World',icon:'🌍'};
+  if(e==='mctemplate') return {label:'Minecraft Template',icon:'🧱'};
+  // ZIP / archives
   if(e==='zip') return {label:'Offline PWA / ZIP',icon:'📦'};
+  if(['rar','7z','tar','gz','bz2','xz'].includes(e)) return {label:'Archive',icon:'🗜️'};
+  // Code
+  if(['html','css','js','json','py','java','kt','c','cpp','cs','php','rb','go','rs','sh','xml','yml','yaml'].includes(e))
+    return {label:'Code',icon:'💻'};
+  // Fonts
+  if(['ttf','otf','woff','woff2'].includes(e)) return {label:'Font',icon:'🔤'};
   return {label:'Unknown',icon:'❓'};
 }
 
@@ -57,8 +81,13 @@ function render(files){
   list.innerHTML=files.map(f=>{
     const t=typeOf(f.filename);
     const name=f.appName||f.filename;
+    const fallback = t.icon;
+    const img = f.icon
+      ? `<img class="iconimg" src="${ICON}${f.icon}" alt=""
+             onerror="this.outerHTML='<div class=\\'icon\\'>${fallback}</div>'">`
+      : `<div class="icon">${fallback}</div>`;
     return `<div class="card">
-      <div class="icon">${t.icon}</div>
+      ${img}
       <div class="name">${name}</div>
       <a class="btn" href="${RAW}${f.filename}" download>Download</a>
       <div class="type">${t.label}</div>
